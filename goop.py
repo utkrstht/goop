@@ -2,17 +2,23 @@ import os
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from dotenv import load_dotenv
+from random import randint
 
 # load .env
 load_dotenv()
 print("loaded env vars")
 
-kaboom = "U092KBRD5SB"
+PRIMARY_USER = os.environ.get("PRIMARY_USER")
+SECONDARY_USER = os.environ.get("SECONDARY_USER")
+CANVAS_ID = os.environ.get("TODO_CANVAS_ID")
+
 goal_threads = set()
+goals = []
+goals_done_dialog = ["wowie! you sure have some work! :woa:", "oooo that sounds interesting", "that is goopy yes", "ooooooo"]
 
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 
-# goop activities
+##### goop activities
 @app.message("hi goop")
 def message_goop(say):
     say("hi i'm goop")
@@ -23,13 +29,17 @@ def message_goop(say):
     say("hi i'm goop")
     print("goop was hi'ed")
 
-# todo stuff
+##### todo stuff
 @app.message("goop ask me my goals for today please")
 def todo_create(message, client):
-    # use this weird ass thing to get thread_ts
+    # make sure no one abuses 
+    if message["user"] != PRIMARY_USER:
+        return
+    
+    # use this weird ass thing to get thread_ts    
     response = client.chat_postMessage(
         channel=message["channel"],
-        text=f"what are your goals for today? <@{kaboom}>"
+        text=f"what are your goals for today? <@{PRIMARY_USER}>"
     )
     print("goop asked for goals")
     goal_threads.add(response["ts"])
@@ -51,12 +61,21 @@ def handle_todo_update(event, say):
         return
 
     # is it me?
-    if event.get("user") != kaboom:
+    if event.get("user") != PRIMARY_USER:
+        return
+    
+    # goals done!
+    if event.get("text").lower() == "that's it!" or "that's it":
+        goal_threads.remove(thread_ts)
+        # say random cool thing lol
+        say(goals_done_dialog[randint(0, len(goals_done_dialog-1))])
         return
     
     print("goop saw a thread reply from kabom")
-    goals = event.get("text")
-    say(text=f"```{goals}```", thread_ts=thread_ts)
+    goal = event.get("text")
+    goals.append(goal)
+
+# update canvas (TODO)
 
 if __name__ == "__main__":
     SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()
