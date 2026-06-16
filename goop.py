@@ -19,6 +19,22 @@ goals_done_dialog = ["wowie! you sure have some work! :woa:", "oooo that sounds 
 
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 
+##### util helpers
+def say_thread(text, channel, client):
+    response = client.chat_postMessage(
+        channel=channel,
+        text=text,
+    )
+    return response
+
+def say_in_thread(text, channel, client, thread_ts):
+    response = client.chat_postMessage(
+        channel=channel,
+        text=text,
+        thread_ts=thread_ts,
+    )
+    return response
+
 ##### goop activities
 @app.message("hi goop")
 def message_goop(say):
@@ -30,6 +46,10 @@ def message_goop(say):
     say("hi i'm goop")
     print("goop was hi'ed")
 
+@app.message("goop tell vro to shut up")
+def shutup(say):
+    say("shut up vro oml")
+
 ##### todo stuff
 @app.message("goop ask me my goals for today please")
 def todo_create(message, client):
@@ -37,11 +57,8 @@ def todo_create(message, client):
     if message["user"] != PRIMARY_USER:
         return
     
-    # use this weird ass thing to get thread_ts    
-    response = client.chat_postMessage(
-        channel=message["channel"],
-        text=f"what are your goals for today? <@{PRIMARY_USER}>"
-    )
+    # switch to using custom function
+    response = say_thread(channel=message["channel"], text=f"what are your goals for today? <@{PRIMARY_USER}>", client=client)
     print("goop asked for goals")
     goal_threads.add(response["ts"])
 
@@ -55,7 +72,7 @@ def update_todo_canvas():
 
 # handle goals thread reply
 @app.event("message")
-def handle_todo_update(event, say):
+def handle_todo_update(event, client):
     if event.get("subtype"):
         return
     
@@ -78,7 +95,8 @@ def handle_todo_update(event, say):
     if event.get("text").lower() == "that's it!" or event.get("text").lower() == "that's it":
         goal_threads.remove(thread_ts)
         # say random cool thing lol
-        say(goals_done_dialog[randint(0, len(goals_done_dialog)-1)])
+        # add custom helper for thread reply
+        response = say_in_thread(goals_done_dialog[randint(0, len(goals_done_dialog)-1)], event.get("channel"), client=client, thread_ts=thread_ts)
         update_todo_canvas()
         print("updated todo canvas")
         return
