@@ -7,7 +7,7 @@ i feel like i can make it something more, something... goopy.
 ## how to run
 First, prepare your slack application, take the app token, and bot token.  
 Your app token requires `connections:write` scope and your bot token requires `canvases:read canvases:write chat:write groups:history channels:history` scopes.
-Then, take your own user ID, and a to-do canvas ID. Secondary user is completely optional, review the code to see what it does.  
+Then, take your own user ID, and a to-do canvas ID and the section ID of where you want to insert your todo list. Secondary user is completely optional, review the code to see what it does.  
 Put all of these values in their respective variables in .env.example
 
 ```bash
