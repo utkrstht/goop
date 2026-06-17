@@ -31,14 +31,17 @@ def say_thread(text, channel, client):
     )
     return response
 
-def say_in_thread(text, channel, client, thread_ts):
-    response = client.chat_postMessage(
-        channel=channel,
-        text=text,
-        thread_ts=thread_ts,
-    )
-    return response
-
+def say_in_thread(text, say, channel, client, thread_ts):
+    if thread_ts:
+        response = client.chat_postMessage(
+            channel=channel,
+            text=text,
+            thread_ts=thread_ts,
+        )
+        return response
+    else: 
+        # edge cases where thread_ts MAY exist
+        say(text)
 
 ##### goals management
 def load_goals():
@@ -92,18 +95,25 @@ def goals_to_markdown(goals_secondary):
 
 ##### goop activities
 @app.message("hi goop")
-def message_goop(say):
-    say("hi i'm goop")
+def message_goop(client, message, say):
+    # if invoked in thread, it will reply in thread
+    thread_ts = message.get("thread_ts") 
+    say_in_thread("hi i'm goop", say, message["channel"], client, thread_ts)
     print("goop was hi'ed")
 
 @app.message("goop say hi")
-def message_goop(say):
-    say("hi i'm goop")
+def message_goop(client, message, say):
+    # if invoked in thread, it will reply in thread
+    thread_ts = message.get("thread_ts") 
+    say_in_thread("hi i'm goop", say, message["channel"], client, thread_ts)
     print("goop was hi'ed")
 
 @app.message("goop tell vro to shut up")
-def shutup(say):
-    say("shut up vro oml")
+def message_shutup(client, message, say):
+    # if invoked in thread, it will reply in thread
+    thread_ts = message.get("thread_ts") 
+    say_in_thread("vro shut up", say, message["channel"], client, thread_ts)
+    print("goop shut someone up")
 
 ##### todo stuff
 @app.message("goop ask me my goals for today please")
