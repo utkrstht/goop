@@ -108,6 +108,13 @@ def message_goop(client, message, say):
     say_in_thread("hi i'm goop", say, message["channel"], client, thread_ts)
     print("goop was hi'ed")
 
+@app.message("goop")
+def message_goop(client, message, say):
+    # if invoked in thread, it will reply in thread
+    thread_ts = message.get("thread_ts") 
+    say_in_thread("goopy", say, message["channel"], client, thread_ts)
+    print("goop was gooped")
+
 @app.message("goop tell vro to shut up")
 def message_shutup(client, message, say):
     # if invoked in thread, it will reply in thread
