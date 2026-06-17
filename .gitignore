@@ -1,4 +1,6 @@
 .env
 
+# goals file
+goals.json
 # testing platform
 validate.py

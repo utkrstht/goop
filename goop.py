@@ -74,14 +74,14 @@ def add_goal(goal):
 
     goals_secondary.append({"goal": goal, "done": False})
     # update canvas using secondary object
-    update_todo_canvas()
+    update_todo_canvas(goals_secondary)
     section_id = lookup_goal(goal)
 
     # add goal
     goals.append({"goal": goal, "done": False, "section_id": section_id})
     save_goals(goals)
 
-def goals_to_markdown():
+def goals_to_markdown(goals_secondary):
     lines = []
 
     for goal in goals_secondary:
@@ -118,9 +118,9 @@ def todo_create(message, client):
     goalAsk_threads.add(response["ts"])
 
 # update canvas
-def update_todo_canvas():
+def update_todo_canvas(goals_secondary):
     # create checklist in form: - [ ] (goal)
-    checklist = goals_to_markdown()
+    checklist = goals_to_markdown(goals_secondary)
 
     # edit canvas
     app.client.canvases_edit(canvas_id=CANVAS_ID, changes=[{"operation": "insert_after", "section_id": SECTION_ID, "document_content": {"type": "markdown", "markdown": f"\n{checklist}"}}])
@@ -153,7 +153,6 @@ def handle_todo_update(event, client):
         # say random cool thing lol
         # add custom helper for thread reply
         say_in_thread(goals_done_dialog[randint(0, len(goals_done_dialog)-1)], event.get("channel"), client=client, thread_ts=thread_ts)
-        update_todo_canvas()
         print("updated todo canvas")
         return
     

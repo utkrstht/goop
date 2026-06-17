@@ -28,3 +28,6 @@ python goop.py
 - can say hi to you :3
 - can ask your goals
 - can edit canvas as per your goals!
+
+### latest commit name
+feat: fix local variable being called globally, remove duplicate update function call
