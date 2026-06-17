@@ -145,7 +145,7 @@ def update_todo_canvas(goals_secondary):
 
 # handle goals thread reply
 @app.event("message")
-def handle_todo_update(event, client):
+def handle_todo_update(event, client, say):
     if event.get("subtype"):
         return
     
@@ -169,7 +169,7 @@ def handle_todo_update(event, client):
         goalAsk_threads.remove(thread_ts)
         # say random cool thing lol
         # add custom helper for thread reply
-        say_in_thread(goals_done_dialog[randint(0, len(goals_done_dialog)-1)], event.get("channel"), client=client, thread_ts=thread_ts)
+        say_in_thread(goals_done_dialog[randint(0, len(goals_done_dialog)-1)], say, event.get("channel"), client=client, thread_ts=thread_ts)
         print("updated todo canvas")
         return
     
