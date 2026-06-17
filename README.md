@@ -26,4 +26,5 @@ python goop.py
 
 ## features
 - can say hi to you :3
-- can ask your goals and repeat whatever you say in the thread (for now :3)
+- can ask your goals
+- can edit canvas as per your goals!
