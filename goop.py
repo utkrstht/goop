@@ -101,6 +101,10 @@ def goals_to_markdown(goals_secondary):
     lines = []
 
     for goal in goals_secondary:
+        # only pass goals that aren't synced to prevent the entire goal list from being appended
+        if goal.get("synced"):
+            continue
+
         checkbox = "x" if goal["done"] else " "
         lines.append(f"- [{checkbox}] {goal['goal']}")
 
