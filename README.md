@@ -29,5 +29,8 @@ python goop.py
 - can ask your goals
 - can edit canvas as per your goals!
 
+## issues
+- goop appends the entire goal list every goal to canvas
+
 ### latest commit name
 feat: fix local variable being called globally, remove duplicate update function call

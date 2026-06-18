@@ -1,5 +1,7 @@
 .env
 
+# pycache came outta nowhere
+__pycache__/
 # goals file
 goals.json
 # testing platform

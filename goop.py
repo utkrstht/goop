@@ -4,6 +4,7 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 from dotenv import load_dotenv
 from random import randint
 from copy import deepcopy
+from pathlib import Path
 import json
 
 # load .env
@@ -11,9 +12,11 @@ load_dotenv()
 print("loaded env vars")
 
 PRIMARY_USER = os.environ.get("PRIMARY_USER")
-SECONDARY_USER = os.environ.get("SECONDARY_USER")
 CANVAS_ID = os.environ.get("TODO_CANVAS_ID")
 SECTION_ID = os.environ.get("TODO_SECTION_ID")
+
+# easter egg on/off
+easter_egg_enabled = False
 
 goals = []
 # goals_secondary exists as a temporary copy of goals so we can access and manipulate goals without touching the primary list
@@ -22,6 +25,16 @@ goalAsk_threads = set()
 goals_done_dialog = ["wowie! you sure have some work! :woa:", "oooo that sounds interesting", "that is goopy yes", "ooooooo"]
 
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
+
+# import easter egg if user installed the file
+file_path = Path("easter_groq.py")
+if file_path.is_file():
+    SECONDARY_USER = os.environ.get("SECONDARY_USER")
+    from easter_groq import generate_message
+    easter_egg_enabled = True
+else: 
+    print("Easter egg unavailable")
+
 
 ##### util helpers
 def say_thread(text, channel, client):
@@ -75,13 +88,13 @@ def add_goal(goal):
     # since we do not want to touch the primary object, we make an independent copy
     goals_secondary = deepcopy(goals)
 
-    goals_secondary.append({"goal": goal, "done": False})
+    goals_secondary.append({"goal": goal, "done": False, "synced": False})
     # update canvas using secondary object
     update_todo_canvas(goals_secondary)
     section_id = lookup_goal(goal)
 
     # add goal
-    goals.append({"goal": goal, "done": False, "section_id": section_id})
+    goals.append({"goal": goal, "done": False, "synced": True, "section_id": section_id})
     save_goals(goals)
 
 def goals_to_markdown(goals_secondary):
@@ -108,7 +121,7 @@ def message_goop(client, message, say):
     say_in_thread("hi i'm goop", say, message["channel"], client, thread_ts)
     print("goop was hi'ed")
 
-@app.message("goop")
+@app.message("goopy goop")
 def message_goop(client, message, say):
     # if invoked in thread, it will reply in thread
     thread_ts = message.get("thread_ts") 
@@ -142,9 +155,7 @@ def update_todo_canvas(goals_secondary):
     # edit canvas
     app.client.canvases_edit(canvas_id=CANVAS_ID, changes=[{"operation": "insert_after", "section_id": SECTION_ID, "document_content": {"type": "markdown", "markdown": f"\n{checklist}"}}])
 
-
-# handle goals thread reply
-@app.event("message")
+##### event listener functions
 def handle_todo_update(event, client, say):
     if event.get("subtype"):
         return
@@ -177,6 +188,33 @@ def handle_todo_update(event, client, say):
     goal = event.get("text")
     add_goal(goal)
     print(f"goop added a goal to goals: {goal}")
+
+def easter_egg(event, client, say):
+    if not easter_egg_enabled:
+        return
+
+    if event.get("subtype"):
+        return
+
+    if event.get("user") != SECONDARY_USER:
+        return
+
+    # generate awesome reply :3
+    awesome_reply = generate_message(event.get("text"))
+
+    thread_ts = event.get("ts") or event.get("thread_ts")
+
+    # send awesome reply!!
+    say_in_thread(awesome_reply, say, event.get("channel"), client, thread_ts)
+
+# global message event listener
+@app.event("message")
+def global_message_event_listener(event, client, say):
+    # call todo update handler
+    handle_todo_update(event=event, client=client, say=say)
+    
+    # call easter egg
+    easter_egg(event=event, client=client, say=say)
 
 
 if __name__ == "__main__":
