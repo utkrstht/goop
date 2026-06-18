@@ -33,4 +33,4 @@ python goop.py
 - goop appends the entire goal list every goal to canvas
 
 ### latest commit name
-feat: fix local variable being called globally, remove duplicate update function call
+chore: update requirements for easter egg
