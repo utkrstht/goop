@@ -22,7 +22,9 @@ goals = []
 # goals_secondary exists as a temporary copy of goals so we can access and manipulate goals without touching the primary list
 goals_secondary = []
 goalAsk_threads = set()
-goals_done_dialog = ["wowie! you sure have some work! :woa:", "oooo that sounds interesting", "that is goopy yes", "ooooooo"]
+goalDone_threads = set()
+goals_ask_dialog = ["wowie! you sure have some work! :woa:", "oooo that sounds interesting", "that is goopy yes", "ooooooo"]
+goals_done_dialog = ["great job!", "you did alot of work :o", "so... goopy...", "wowie"]
 
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 
@@ -97,6 +99,20 @@ def add_goal(goal):
     goals.append({"goal": goal, "done": False, "synced": True, "section_id": section_id})
     save_goals(goals)
 
+def mark_goal(goal):
+    goals = load_goals()
+    
+    for goal_new in goals:
+        if goal_new["goal"] == goal:
+            goal_new["done"] = True
+            # set synced to false so on next update cycle it updates
+            goal_new["synced"] = False
+            break
+
+    save_goals(goals)
+    update_todo_canvas(goals)
+
+ 
 def goals_to_markdown(goals_secondary):
     lines = []
 
@@ -125,6 +141,13 @@ def message_goop(client, message, say):
     say_in_thread("hi i'm goop", say, message["channel"], client, thread_ts)
     print("goop was hi'ed")
 
+@app.message("i love goop")
+def message_goop(client, message, say):
+    # if invoked in thread, it will reply in thread
+    thread_ts = message.get("thread_ts") 
+    say_in_thread("awww i love you too", say, message["channel"], client, thread_ts)
+    print("goop was love'ed")
+
 @app.message("goopy goop")
 def message_goop(client, message, say):
     # if invoked in thread, it will reply in thread
@@ -141,7 +164,7 @@ def message_shutup(client, message, say):
 
 ##### todo stuff
 @app.message("goop ask me my goals for today please")
-def todo_create(message, client):
+def todo_update(message, client):
     # make sure no one abuses 
     if message["user"] != PRIMARY_USER:
         return
@@ -150,6 +173,16 @@ def todo_create(message, client):
     response = say_thread(channel=message["channel"], text=f"what are your goals for today? <@{PRIMARY_USER}>", client=client)
     print("goop asked for goals")
     goalAsk_threads.add(response["ts"])
+
+@app.message("goop i did alot of work")
+def todo_check(message, client):
+    # make sure no one abuses
+    if message["user"] != PRIMARY_USER:
+        return
+    
+    response = say_thread(channel=message["channel"], text=f"what goals did you get done? <@{PRIMARY_USER}>", client=client)
+    print("goop asked what goals are done")
+    goalDone_threads.add(response["ts"])
 
 # update canvas
 def update_todo_canvas(goals_secondary):
@@ -184,7 +217,7 @@ def handle_todo_update(event, client, say):
         goalAsk_threads.remove(thread_ts)
         # say random cool thing lol
         # add custom helper for thread reply
-        say_in_thread(goals_done_dialog[randint(0, len(goals_done_dialog)-1)], say, event.get("channel"), client=client, thread_ts=thread_ts)
+        say_in_thread(goals_ask_dialog[randint(0, len(goals_ask_dialog)-1)], say, event.get("channel"), client=client, thread_ts=thread_ts)
         print("updated todo canvas")
         return
     
@@ -192,6 +225,36 @@ def handle_todo_update(event, client, say):
     goal = event.get("text")
     add_goal(goal)
     print(f"goop added a goal to goals: {goal}")
+
+def handle_todo_check(event, client, say):
+    if event.get("subtype"):
+        return
+    
+    thread_ts = event.get("thread_ts")
+
+    # is it a thread reply?
+    if not thread_ts:
+        return
+
+    # is it our thread?
+    if not thread_ts in goalDone_threads:
+        return
+
+    # is it me?
+    if event.get("user") != PRIMARY_USER:
+        return
+    
+    if event.get("text").lower() in ("that's it", "that's it!", "that's all!", "that's all"):
+        goalDone_threads.remove(thread_ts)
+        # say random cool thing lol
+        say_in_thread(goals_done_dialog[randint(0, len(goals_done_dialog)-1)], say, event.get("channel"), client=client, thread_ts=thread_ts)
+        print("todo check done")
+        return
+    
+    print("goop saw a thread reply from kabom (goals done thread)")
+    goal = event.get("text")
+    mark_goal(goal)
+    print(f"goop updated a goal: {goal}")
 
 def easter_egg(event, client, say):
     if not easter_egg_enabled:
@@ -216,6 +279,9 @@ def easter_egg(event, client, say):
 def global_message_event_listener(event, client, say):
     # call todo update handler
     handle_todo_update(event=event, client=client, say=say)
+
+    # call todo check handler
+    handle_todo_check(event=event, client=client, say=say)
     
     # call easter egg
     easter_egg(event=event, client=client, say=say)
