@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 from random import randint
 from copy import deepcopy
 from pathlib import Path
+import schedule
+import time
+import threading
 import json
 
 # load .env
@@ -171,16 +174,16 @@ def message_shutup(client, message, say):
     print("goop shut someone up")
 
 ##### todo stuff
-@app.message("goop ask me my goals")
-def todo_update(message, client):
+#@app.message("goop ask me my goals")
+def todo_update(channel, client):
     # switch to using custom function
-    response = say_thread(channel=message["channel"], text=f"what are your goals for today? <@{PRIMARY_USER}>", client=client)
+    response = say_thread(channel=channel, text=f"what are your goals for today? <@{PRIMARY_USER}>", client=client)
     print("goop asked for goals")
     goalAsk_threads.add(response["ts"])
 
-@app.message("goop i did alot of work")
-def todo_check(message, client):
-    response = say_thread(channel=message["channel"], text=f"what goals did you get done? <@{PRIMARY_USER}>", client=client)
+#@app.message("goop i did alot of work")
+def todo_check(channel, client):
+    response = say_thread(channel=channel, text=f"what goals did you get done? <@{PRIMARY_USER}>", client=client)
     print("goop asked what goals are done")
     goalDone_threads.add(response["ts"])
 
@@ -286,6 +289,38 @@ def global_message_event_listener(event, client, say):
     # call easter egg
     easter_egg(event=event, client=client, say=say)
 
+##### scheduler functions
+def scheduler_loop():
+    print("scheduler start")
+
+    # call todo update handler
+    schedule.every().day.at("12:45").do(
+        todo_update,
+        channel="C0AJTDS75HN",
+        client=app.client,
+    )
+    # call todo check handler
+    schedule.every().day.at("21:00").do(
+        todo_check,
+        channel="C0AJTDS75HN",
+        client=app.client,
+    )
+
+    while True:
+        schedule.run_pending()
+
+        # optimization :3        
+        idle_seconds = schedule.idle_seconds()
+        print("sleeping for ", idle_seconds)
+        time.sleep(idle_seconds)
+
 
 if __name__ == "__main__":
+    threading.Thread(target=scheduler_loop, daemon=True).start()
+
+
     SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()
+
+
+
+    
