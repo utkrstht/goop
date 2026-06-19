@@ -99,11 +99,20 @@ def add_goal(goal):
     goals.append({"goal": goal, "done": False, "synced": True, "section_id": section_id})
     save_goals(goals)
 
+# this is for removing the unchecked goal as when we update the canvas, it creates a new checkbox
+def delete_goal_section(goal):
+    goals = load_goals()
+
+    for goal_new in goals:
+        if goal_new["goal"] == goal:
+            app.client.canvases_edit(canvas_id=CANVAS_ID, changes=[{"operation": "delete", "section_id": goal_new["section_id"]}])
+
 def mark_goal(goal):
     goals = load_goals()
     
     for goal_new in goals:
         if goal_new["goal"] == goal:
+            delete_goal_section(goal)
             goal_new["done"] = True
             # set synced to false so on next update cycle it updates
             goal_new["synced"] = False
@@ -112,7 +121,6 @@ def mark_goal(goal):
     save_goals(goals)
     update_todo_canvas(goals)
 
- 
 def goals_to_markdown(goals_secondary):
     lines = []
 
@@ -163,12 +171,8 @@ def message_shutup(client, message, say):
     print("goop shut someone up")
 
 ##### todo stuff
-@app.message("goop ask me my goals for today please")
+@app.message("goop ask me my goals")
 def todo_update(message, client):
-    # make sure no one abuses 
-    if message["user"] != PRIMARY_USER:
-        return
-    
     # switch to using custom function
     response = say_thread(channel=message["channel"], text=f"what are your goals for today? <@{PRIMARY_USER}>", client=client)
     print("goop asked for goals")
@@ -176,10 +180,6 @@ def todo_update(message, client):
 
 @app.message("goop i did alot of work")
 def todo_check(message, client):
-    # make sure no one abuses
-    if message["user"] != PRIMARY_USER:
-        return
-    
     response = say_thread(channel=message["channel"], text=f"what goals did you get done? <@{PRIMARY_USER}>", client=client)
     print("goop asked what goals are done")
     goalDone_threads.add(response["ts"])
