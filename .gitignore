@@ -2,7 +2,10 @@
 
 # pycache came outta nowhere
 __pycache__/
+
 # goals file
 goals.json
+project.json
+
 # testing platform
 validate.py

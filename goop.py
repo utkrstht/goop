@@ -185,11 +185,12 @@ def message_shutup(client, message, say):
     print("goop shut someone up")
 
 ##### project ideas
-@app.message("goop i have a fire idea")
+@app.message("goop i have a idea")
 def project_add(message, client):
     response = say_thread(channel=message["channel"], text=f"what's your project idea? <@{PRIMARY_USER}>", client=client)
     print("goop asked for project idea")
     projectAdd_threads.add(response["ts"])
+
 
 ##### todo stuff
 #@app.message("goop ask me my goals")
@@ -298,8 +299,9 @@ def handle_project_add(event, client, say):
     print("goop saw a thread reply from kabom (project add thread)")
     project_idea = event.get("text")
     add_project(project_idea)
+    say_in_thread("wowie that sounds super cool!", say=say, channel=event.get("channel"), client=client, thread_ts=thread_ts)
     print(f"goop added a project idea: {project_idea}")
-    pass
+    projectAdd_threads.remove(thread_ts)
 
 def easter_egg(event, client, say):
     if not easter_egg_enabled:
