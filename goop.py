@@ -327,6 +327,9 @@ def global_message_event_listener(event, client, say):
 
     # call todo check handler
     handle_todo_check(event=event, client=client, say=say)
+
+    # call project add handler
+    handle_project_add(event=event, client=client, say=say)
     
     # call easter egg
     easter_egg(event=event, client=client, say=say)
