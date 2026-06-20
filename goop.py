@@ -15,8 +15,10 @@ load_dotenv()
 print("loaded env vars")
 
 PRIMARY_USER = os.environ.get("PRIMARY_USER")
-CANVAS_ID = os.environ.get("TODO_CANVAS_ID")
-SECTION_ID = os.environ.get("TODO_SECTION_ID")
+TODO_CANVAS_ID = os.environ.get("TODO_CANVAS_ID")
+TODO_SECTION_ID = os.environ.get("TODO_SECTION_ID")
+PROJECT_CANVAS_ID = os.environ.get("PROJECT_CANVAS_ID")
+PROJECT_SECTION_ID = os.environ.get("PROJECT_SECTION_ID")
 
 # easter egg on/off
 easter_egg_enabled = False
@@ -28,6 +30,8 @@ goalAsk_threads = set()
 goalDone_threads = set()
 goals_ask_dialog = ["wowie! you sure have some work! :woa:", "oooo that sounds interesting", "that is goopy yes", "ooooooo"]
 goals_done_dialog = ["great job!", "you did alot of work :o", "so... goopy...", "wowie"]
+
+projectAdd_threads = set()
 
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 
@@ -80,7 +84,7 @@ def lookup_goal(goal):
     search_term = max(words, key=len)
 
     response = app.client.canvases_sections_lookup(
-    canvas_id=CANVAS_ID,
+    canvas_id=TODO_CANVAS_ID,
     criteria={
         "contains_text": search_term
         }
@@ -108,7 +112,7 @@ def delete_goal_section(goal):
 
     for goal_new in goals:
         if goal_new["goal"] == goal:
-            app.client.canvases_edit(canvas_id=CANVAS_ID, changes=[{"operation": "delete", "section_id": goal_new["section_id"]}])
+            app.client.canvases_edit(canvas_id=TODO_CANVAS_ID, changes=[{"operation": "delete", "section_id": goal_new["section_id"]}])
 
 def mark_goal(goal):
     goals = load_goals()
@@ -136,6 +140,13 @@ def goals_to_markdown(goals_secondary):
         lines.append(f"- [{checkbox}] {goal['goal']}")
 
     return "\n".join(lines)
+
+##### project management
+# we don't need anything other than this for now since project ideas don't really need much 
+def add_project(project_idea):
+    project_idea = f"- [ ] {project_idea}"
+
+    app.client.canvases_edit(canvas_id=PROJECT_CANVAS_ID, changes=[{"operation": "insert_after", "section_id": PROJECT_SECTION_ID, "document_content": {"type": "markdown", "markdown": f"\n{project_idea}"}}])
 
 ##### goop activities
 @app.message("hi goop")
@@ -173,6 +184,13 @@ def message_shutup(client, message, say):
     say_in_thread("vro shut up", say, message["channel"], client, thread_ts)
     print("goop shut someone up")
 
+##### project ideas
+@app.message("goop i have a fire idea")
+def project_add(message, client):
+    response = say_thread(channel=message["channel"], text=f"what's your project idea? <@{PRIMARY_USER}>", client=client)
+    print("goop asked for project idea")
+    projectAdd_threads.add(response["ts"])
+
 ##### todo stuff
 #@app.message("goop ask me my goals")
 def todo_update(channel, client):
@@ -193,7 +211,7 @@ def update_todo_canvas(goals_secondary):
     checklist = goals_to_markdown(goals_secondary)
 
     # edit canvas
-    app.client.canvases_edit(canvas_id=CANVAS_ID, changes=[{"operation": "insert_after", "section_id": SECTION_ID, "document_content": {"type": "markdown", "markdown": f"\n{checklist}"}}])
+    app.client.canvases_edit(canvas_id=TODO_CANVAS_ID, changes=[{"operation": "insert_after", "section_id": TODO_SECTION_ID, "document_content": {"type": "markdown", "markdown": f"\n{checklist}"}}])
 
 ##### event listener functions
 def handle_todo_update(event, client, say):
@@ -258,6 +276,30 @@ def handle_todo_check(event, client, say):
     goal = event.get("text")
     mark_goal(goal)
     print(f"goop updated a goal: {goal}")
+
+def handle_project_add(event, client, say):
+    if event.get("subtype"):
+        return
+    
+    thread_ts = event.get("thread_ts")
+
+    # is it a thread reply?
+    if not thread_ts:
+        return
+
+    # is it our thread?
+    if not thread_ts in projectAdd_threads:
+        return
+
+    # is it me?
+    if event.get("user") != PRIMARY_USER:
+        return
+    
+    print("goop saw a thread reply from kabom (project add thread)")
+    project_idea = event.get("text")
+    add_project(project_idea)
+    print(f"goop added a project idea: {project_idea}")
+    pass
 
 def easter_egg(event, client, say):
     if not easter_egg_enabled:
