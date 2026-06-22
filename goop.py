@@ -149,35 +149,35 @@ def add_project(project_idea):
     app.client.canvases_edit(canvas_id=PROJECT_CANVAS_ID, changes=[{"operation": "insert_after", "section_id": PROJECT_SECTION_ID, "document_content": {"type": "markdown", "markdown": f"\n{project_idea}"}}])
 
 ##### goop activities
-@app.message("(?i)^hi goop$")
+@app.message("(?i)hi goop")
 def message_goop(client, message, say):
     # if invoked in thread, it will reply in thread
     thread_ts = message.get("thread_ts") 
     say_in_thread("hi i'm goop", say, message["channel"], client, thread_ts)
     print("goop was hi'ed")
 
-@app.message("(?i)^goop say hi$")
+@app.message("(?i)goop say hi")
 def message_goop(client, message, say):
     # if invoked in thread, it will reply in thread
     thread_ts = message.get("thread_ts") 
     say_in_thread("hi i'm goop", say, message["channel"], client, thread_ts)
     print("goop was hi'ed")
 
-@app.message("(?i)^i love goop$")
+@app.message("(?i)i love goop")
 def message_goop(client, message, say):
     # if invoked in thread, it will reply in thread
     thread_ts = message.get("thread_ts") 
     say_in_thread("awww i love you too", say, message["channel"], client, thread_ts)
     print("goop was love'ed")
 
-@app.message("(?i)^i love you goop$")
+@app.message("(?i)i love you goop")
 def message_goop(client, message, say):
     # if invoked in thread, it will reply in thread
     thread_ts = message.get("thread_ts") 
     say_in_thread("awww i love you too", say, message["channel"], client, thread_ts)
     print("goop was love'ed")
 
-@app.message("(?i)^goopy goop$")
+@app.message("(?i)goopy goop")
 def message_goop(client, message, say):
     # if invoked in thread, it will reply in thread
     thread_ts = message.get("thread_ts") 
