@@ -30,6 +30,19 @@ cp .env.example .env
 python goop.py
 ```
 
+## goop activities
+brekaing news: goop acitvies are now case insesitive!!!!!!!11
+- "hi goop" 
+- "goop say hi"
+- "i love goop"
+- "i love you goop"
+- "goop tell vro to shut up"
+
+project ideas:  
+- "goop i have a idea"
+
+
+
 ## features
 - can say hi to you :3
 - can ask your goals
