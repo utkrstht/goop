@@ -8,6 +8,7 @@ from pathlib import Path
 import schedule
 import time
 import threading
+import pytz
 import json
 
 # load .env
@@ -19,6 +20,8 @@ TODO_CANVAS_ID = os.environ.get("TODO_CANVAS_ID")
 TODO_SECTION_ID = os.environ.get("TODO_SECTION_ID")
 PROJECT_CANVAS_ID = os.environ.get("PROJECT_CANVAS_ID")
 PROJECT_SECTION_ID = os.environ.get("PROJECT_SECTION_ID")
+
+IST = pytz.timezone('Asia/Kolkata')
 
 # easter egg on/off
 easter_egg_enabled = False
@@ -348,13 +351,13 @@ def scheduler_loop():
     print("scheduler start")
 
     # call todo update handler
-    schedule.every().day.at("12:45").do(
+    schedule.every().day.at("12:45", IST).do(
         todo_update,
         channel="C0AJTDS75HN",
         client=app.client,
     )
     # call todo check handler
-    schedule.every().day.at("21:00").do(
+    schedule.every().day.at("21:00", IST).do(
         todo_check,
         channel="C0AJTDS75HN",
         client=app.client,
