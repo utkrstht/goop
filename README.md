@@ -42,7 +42,6 @@ project ideas:
 - "goop i have a idea"
 
 
-
 ## features
 - can say hi to you :3
 - can ask your goals
